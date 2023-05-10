@@ -1,9 +1,9 @@
-# Title
+# PLEN5Stack Scooter
 
 ## About
 
-日本語  
-英語
+PLEN5Stack用の3輪スクータープロジェクト
+3-wheeled scooter project for PLEN5Stack
 
 ---
 
