@@ -1,5 +1,4 @@
 #include <M5Unified.h> // M5Unifiedライブラリをプログラムで使用可能にします。
-#include
 
 // グローバル変数（プログラム全体で使用する変数の定義をします。）
 uint32_t count;
