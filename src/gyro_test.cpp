@@ -177,6 +177,8 @@ void setup(void)
 
   M5.begin(cfg);
 
+  M5.Log.setLogLevel(m5::log_target_serial, ESP_LOG_INFO);
+
   const char* name;
   switch (M5.Imu.getType())
   {
@@ -234,7 +236,7 @@ void loop(void)
     data.accel.z;      // accel z-axis value.
     data.accel.value;  // accel 3values array [0]=x / [1]=y / [2]=z.
 
-    Serial.printf(">AccelX:%f\n", data.accel.x);
+//    Serial.printf(">AccelX:%f\n", data.accel.x);
 
     data.gyro.x;      // gyro x-axis value.
     data.gyro.y;      // gyro y-axis value.
@@ -248,7 +250,7 @@ void loop(void)
 
     data.value;       // all sensor 9values array [0~2]=accel / [3~5]=gyro / [6~8]=mag
 
-    // M5_LOGV("ax:%f  ay:%f  az:%f", data.accel.x, data.accel.y, data.accel.z);
+     M5_LOGV("ax:%f  ay:%f  az:%f", data.accel.x, data.accel.y, data.accel.z);
     // M5_LOGV("gx:%f  gy:%f  gz:%f", data.gyro.x , data.gyro.y , data.gyro.z );
     // M5_LOGV("mx:%f  my:%f  mz:%f", data.mag.x  , data.mag.y  , data.mag.z  );
 
