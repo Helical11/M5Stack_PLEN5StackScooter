@@ -44,9 +44,11 @@ void loop() {
   Serial.printf("COUNT: %u\n", count);      // countをシリアルに表示
   count++;                                  // countを1増やす
 
-  M5.Display.printf("%d\n", sensor.getADCValue(POS_X));
+  M5.Display.printf("%4u\n", sensor.getADCValue(POS_X));
+  M5.Display.printf("%4u\n", sensor.getADCValue(POS_Y));
+  M5.Display.printf("%4u\n",sensor.getButtonStatus());
 
 
-  delay(1000);                              // 1秒待つ
+  delay(100);                              // 1秒待つ
 
 }
