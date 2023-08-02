@@ -7,8 +7,8 @@ const int CLK2  = 6;
 const int DIR2 = 8;
 
 // ステッピングモータ回転数指示
-int16_t Fre1 = 100;
-int16_t Fre2 = 100;
+int16_t Fre1 = 0;
+int16_t Fre2 = 0;
 
 // 車体角度変数 加速度から
 float rowAngleA = 0.0;
@@ -22,6 +22,9 @@ float AngleG = 0.0;
 float preAngle = 0.0;
 float Angle = 0.0;
 
+float AccelOffset = 0.0;
+float GyroOffset = 0.0;
+
 // ラジアン→度変換
 const float RADTODEG = 180/3.14;
 
@@ -32,12 +35,38 @@ const int16_t DUTY = 2048;
 // 割り込み
 hw_timer_t * timer = NULL;
 
-// 角度計算
-void onTimer() {
+// Teleplot用シリアル出力
+void TeleplotPrint() {
+  Serial.printf(">rowAngleA:%f\n", rowAngleA);
+  Serial.printf(">AngleA:%f\n", AngleA);
+  Serial.printf(">rowAngleG:%f\n", rowAngleG);
+  Serial.printf(">AngleG:%f\n", AngleG);
+  Serial.printf(">Angle:%f\n", Angle);
+}
+
+void IMUCalibration() {
+
+
+  for(int i = 0; i < 1000; i++ ) {
+    auto imu_update = M5.Imu.update();
+    auto data = M5.Imu.getImuData();
+    AccelOffset += atan2(data.accel.z, data.accel.y) * RADTODEG;
+    GyroOffset += data.gyro.x;
+    printf(">GyroOffset:%f\n", GyroOffset);
+    delay(5);
+  }
+
+  AccelOffset /= 1000;
+  GyroOffset /= 1000;
 
 }
 
+// 割り込み時の実行関数
+void IRAM_ATTR onTimer() {
 
+  TeleplotPrint();
+
+}
 
 // セッティング
 void setup() {
@@ -58,11 +87,13 @@ void setup() {
   cfg.internal_imu = true;
   M5.begin(cfg);
 
+  IMUCalibration();
+
 // 割り込みタイマー有効化
   timer = timerBegin(0, 80, true);
   timerAttachInterrupt(timer, &onTimer, true);
-  timerAlarmWrite(timer, 1000000, true);
-//  timerAlarmEnable(timer);
+  timerAlarmWrite(timer, 100000, true);
+  timerAlarmEnable(timer);
 }
 
 
@@ -84,14 +115,14 @@ void loop() {
 
 // 加速度センサからの角度算出
     rowAngleA = atan2(data.accel.z, data.accel.y) * RADTODEG;
-    AngleA = 0.8*preAngle + 0.2*rowAngleA;
+    AngleA = (rowAngleA - AccelOffset);
 
 // ジャイロからの角度算出
-    rowAngleG = - data.gyro.x * 0.1;
+    rowAngleG = - (data.gyro.x - GyroOffset )* 0.1;
     AngleG = preAngle + rowAngleG;
 
 // 相補フィルタ
-    Angle = 0.8*AngleG + 0.2*AngleA;
+    Angle = 0.44*AngleG + 0.56*AngleA;
 
 //    data.accel.x;   // 車体左右方向
 //    data.accel.y;   // 車体重力方向 直立時1
@@ -102,8 +133,8 @@ void loop() {
 //    data.gyro.z;    // 進行軸回転
 
 // 回転数指示
-    Fre1 = 100*(int16_t)Angle;
-    Fre2 = Fre1;
+//    Fre1 = 100*(int16_t)Angle;
+//    Fre2 = Fre1;
 
 // 回転方向指示
     digitalWrite(DIR1, LOW);
@@ -132,12 +163,6 @@ void loop() {
       M5.Display.printf("%4u\n",Fre2);
       M5.Display.endWrite();
 
-// Teleplot用シリアル出力
-     Serial.printf(">rowAngleA:%f\n", rowAngleA);
-     Serial.printf(">AngleA:%f\n", AngleA);
-     Serial.printf(">rowAngleG:%f\n", rowAngleG);
-     Serial.printf(">AngleG:%f\n", AngleG);
-     Serial.printf(">Angle:%f\n", Angle);
 
     }
 
